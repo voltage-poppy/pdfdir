@@ -149,3 +149,5 @@ src/gui/main_n.ui
 test.py
 /tools/
 .vs/*
+
+pdfdir/

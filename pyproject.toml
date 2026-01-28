@@ -5,6 +5,8 @@ description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
+    "pillow>=12.1.0",
+    "pyinstaller>=6.18.0",
     "pypdf[crypto]~=3.17.0",
     "pyqt5==5.15.11",
     "pyqt5-qt5==5.15.2",

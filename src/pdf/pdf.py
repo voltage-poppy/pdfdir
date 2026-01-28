@@ -53,7 +53,7 @@ class Pdf(object):
     @property
     def _new_path(self):
         name, ext = os.path.splitext(self.path)
-        return name + "_new" + ext
+        return name + ".bm" + ext
 
     @property
     def writer(self):
