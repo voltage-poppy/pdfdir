@@ -14,7 +14,7 @@ from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtWidgets import QMessageBox
 
 from src.config import CONFIG
-from src.convert import clean_clipboard_control_chars, convert_dir_text
+from src.convert import clean_clipboard_control_chars, convert_dir_text, _convert_dir_text
 from src.gui.base import TreeWidget
 from src.gui.main_ui import Ui_PDFdir
 from src.updater import is_updated
@@ -97,6 +97,8 @@ class Main(QtWidgets.QMainWindow, Ui_PDFdir, ControlButtonMixin):
         self.update_action.triggered.connect(self._open_update_page)
         self.english_action.triggered.connect(self.to_english)
         self.chinese_action.triggered.connect(self.to_chinese)
+
+        self.export_pdbm_action.triggered.connect(self.write_pdbm_to_file)
 
     def _set_unwritable(self):
         self.level0_edit.setEnabled(False)
@@ -318,6 +320,25 @@ class Main(QtWidgets.QMainWindow, Ui_PDFdir, ControlButtonMixin):
             self.alert_msg("%s Finished！" % new_path)
         except PermissionError:
             self.alert_msg("Permission denied！", level="warn")
+
+    def write_pdbm_to_file(self):
+        _, pdbm = _convert_dir_text(
+            self.dir_text,
+            self.offset_num,
+            self.level0_text,
+            self.level1_text,
+            self.level2_text,
+            self.level3_text,
+            self.level4_text,
+            self.level5_text,
+            other=self.other_level_index,
+            level_by_space=self.level_by_space,
+            fix_non_seq=self.fix_non_seq,
+        )
+        pdf_path = self.pdf_path
+        pdbm_path = pdf_path[:-4] + ".pdbm" if pdf_path.endswith(".pdf") else pdf_path + ".pdbm"
+        with open(pdbm_path, "w", encoding="utf-8") as f:
+            f.write(pdbm)
 
     @staticmethod
     def dict_to_pdf(pdf_path, index_dict, keep_exist_dir=False):

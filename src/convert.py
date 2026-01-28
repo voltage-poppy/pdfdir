@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 # Pre-compile regex patterns to avoid recompilation on every call
 _PAGE_NUM_PATTERNS_RAW = [
     # Support negative numbers
-    r"((?<!-)-?\d+)",
+    r"((?<!-)#?-?\d+)",
     # Support () around numbers
     r"\((\d+)\)",
     # Support [] around numbers
@@ -41,7 +41,7 @@ PREFIX_SPACE_PATTERN = re.compile(r"\s*")
 
 def split_page_num(text):
     """split between title and page number"""
-    con, num = "", 1
+    con, num = "", "1"
     for pat in COMPILED_PAGE_NUM_PATTERNS:
         res = pat.search(text)
         if res:
@@ -50,8 +50,11 @@ def split_page_num(text):
     if con:
         con = con.rstrip(" .-")
     if num == "":
-        num = 1
-    return con, int(num)
+        num = "1"
+    if num.startswith("#"):
+        return con, int(num[1:]), True
+    else:
+        return con, int(num), False
 
 
 def text_to_list(text):
@@ -136,6 +139,8 @@ def generate_level_pattern_by_prefix_space(dir_list):
     return level_patterns
 
 
+REGEX_MARKDOWN_HEADING = re.compile(r"^#+\s+\d+$")
+
 def _convert_dir_text(
     dir_text,
     offset=0,
@@ -151,6 +156,8 @@ def _convert_dir_text(
 ):
     l0, l1, pagenum, index_dict = 0, 0, -float("inf"), {}
     l2, l3, l4 = 0, 0, 0
+
+    pdbm_lines: list[str] = ["---", "offset: {}".format(offset), "---\n"]
     dir_list = text_to_list(dir_text)
     if level_by_space:
         level0, level1, level2, level3, level4, level5 = (
@@ -158,11 +165,14 @@ def _convert_dir_text(
         )
     i = 0
     for di in dir_list:
+        if REGEX_MARKDOWN_HEADING.match(di) or di.strip() == "":
+            pdbm_lines.append(di)
+            continue
         di = di.rstrip()
-        title, num = split_page_num(di)
+        title, num, implicit = split_page_num(di)
         if num > pagenum or not fix_non_seq:
             pagenum = num
-        index_dict[i] = {"title": title, "real_num": pagenum + offset, "num": pagenum}
+        index_dict[i] = {"title": title, "real_num": pagenum + offset, "num": pagenum, "implicit": implicit}
         level = check_level(
             title, level0, level1, level2, level3, level4, level5, other=other
         )
@@ -183,8 +193,12 @@ def _convert_dir_text(
         elif level == 0:
             l0 = i
         index_dict[i]["title"] = title.lstrip()
+        pdbm_lines.append("{}{} {}{}".format(" " * level, title.lstrip(), "#" if implicit else "",  num))
         i += 1
-    return index_dict
+    pdbm = "\n".join(pdbm_lines)
+    if not pdbm.endswith("\n"):
+        pdbm += "\n"
+    return index_dict, pdbm
 
 
 def convert_dir_text(
@@ -216,7 +230,7 @@ def convert_dir_text(
     :return: the dict of directory, like {0:{'title':'A', 'pagenum':1}, 1:{'title':'B', pagenum:2, parent: 0} ......}
 
     """
-    return _convert_dir_text(
+    mapping, _ = _convert_dir_text(
         dir_text,
         offset,
         level0,
@@ -229,3 +243,4 @@ def convert_dir_text(
         level_by_space=level_by_space,
         fix_non_seq=fix_non_seq,
     )
+    return mapping

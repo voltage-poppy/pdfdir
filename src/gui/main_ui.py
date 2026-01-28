@@ -246,6 +246,14 @@ class Ui_PDFdir(object):
         self.menuBar.addAction(self.help_menu.menuAction())
         self.menuBar.addAction(self.language_menu.menuAction())
 
+        # Add "Export PDBM" action
+        self.export_pdbm_action = QtWidgets.QAction(PDFdir)
+        self.export_pdbm_action.setObjectName("export_pdbm_action")
+        self.run_menu = QtWidgets.QMenu(self.menuBar)
+        self.run_menu.setObjectName("run_menu")
+        self.run_menu.addAction(self.export_pdbm_action)
+        self.menuBar.addAction(self.run_menu.menuAction())
+
         self.retranslateUi(PDFdir)
         QtCore.QMetaObject.connectSlotsByName(PDFdir)
 
@@ -312,3 +320,6 @@ class Ui_PDFdir(object):
         self.fix_non_seq_action.setIconText(_translate("PDFdir", "修复乱序页码"))
         self.keep_exist_dir_action.setText(_translate("PDFdir", "保留已有目录"))
         self.read_exist_dir_action.setText(_translate("PDFdir", "读取目录文本"))
+
+        self.export_pdbm_action.setText(_translate("PDFdir", "Export PDBM"))
+        self.run_menu.setTitle(_translate("PDFdir", "Run"))
